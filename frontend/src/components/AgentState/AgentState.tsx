@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useTranscription } from '@/hooks/useTranscription';
 import { TranscriptionLine } from '@/types/transcription';
+import { TranscriptionControls } from './TranscriptionControls';
+import { RecordButton } from './RecordButton';
 
 const CHUNK_SIZES = [
   { value: 500, label: '500 ms' },
@@ -97,14 +99,13 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => toggleRecording(websocketUrl, chunkDuration)}
-          className={`w-16 h-16 text-3xl rounded-full shadow-lg transition-all ${
-            isRecording ? 'bg-red-500 text-white' : 'bg-white text-gray-700'
-          } hover:scale-105 active:scale-95`}
-        >
-          🎙️
-        </button>
+        <div className='flex flex-col items-center gap-2'>
+          <TranscriptionControls />
+          <RecordButton 
+            isRecording={isRecording}
+            onToggle={() => toggleRecording(websocketUrl, chunkDuration)}
+          />
+        </div>
 
         <div className="space-y-3">
           <div>
