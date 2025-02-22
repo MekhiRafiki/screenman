@@ -1,5 +1,5 @@
 "use client"
-import { AgentState } from '@/components/AgentState/AgentState'
+import AgentState from '@/components/AgentState/AgentState'
 import Stage from '@/components/Stage';
 import { TranscriptionProvider } from '@/context/TranscriptionContext';
 

@@ -2,9 +2,10 @@
 import { useState } from 'react';
 import { useTranscription } from '@/hooks/useTranscription';
 import { TranscriptionLine } from '@/types/transcription';
-import { TranscriptionControls } from './TranscriptionControls';
-import { RecordButton } from './RecordButton';
+import { TranscriptionControls } from './Transcript/TranscriptionControls';
+import { RecordButton } from './Transcript/RecordButton';
 import Thinker from './Thinker';
+import ConvoDisplay from './Conversation/ConvoDisplay';
 
 const CHUNK_SIZES = [
   { value: 500, label: '500 ms' },
@@ -15,26 +16,14 @@ const CHUNK_SIZES = [
   { value: 5000, label: '5000 ms' },
 ];
 
-interface AgentStateProps {
-  onTranscriptUpdate?: (text: string) => void;
-}
 
-export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
+export default function AgentState() {
   const [websocketUrl, setWebsocketUrl] = useState('ws://localhost:8000/asr');
   const [chunkDuration, setChunkDuration] = useState(1000);
   const [showAgenda, setShowAgenda] = useState(false);
   const { isRecording, status, lines, buffer, toggleRecording } = useTranscription();
 
-  // Mock data for agenda and topics
-  const mockData = {
-    agenda: "Today's focus is on improving the speech recognition system and implementing new features.",
-    currentTopic: "Speech Recognition Enhancement",
-    relatedTopics: [
-      { id: 1, title: "WebSocket Integration", description: "Real-time data streaming implementation" },
-      { id: 2, title: "UI/UX Improvements", description: "Enhanced user interface design" },
-      { id: 3, title: "Performance Optimization", description: "System response time improvement" },
-    ]
-  };
+
 
   const handleWebsocketUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value.trim();
@@ -82,10 +71,6 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
     const textContent = item.text + (idx === lines.length - 1 && buffer ? 
       <span className="italic text-gray-400 ml-1">{buffer}</span> : '');
 
-    // Update the main display text
-    if (onTranscriptUpdate && item.text) {
-      onTranscriptUpdate(item.text);
-    }
 
     return (
       <div key={idx} className="mb-4">
@@ -167,34 +152,14 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
       <div className="flex-1 overflow-y-auto mb-4 relative">
         {/* Transcript View */}
         <div className={`space-y-4 ${showAgenda ? 'invisible' : 'visible'}`}>
-          <p className="text-sm text-gray-600 mb-4">{status}</p>
-          {lines.map((line, idx) => renderTranscriptionLine(line, idx))}
-        </div>
-
-        {/* Agenda View */}
-        <div className={`space-y-4 ${showAgenda ? 'visible' : 'invisible'}`}>
-          <div>
-            <h3 className="font-semibold text-gray-800">Conversation Agenda</h3>
-            <p className="text-sm text-gray-600">{mockData.agenda}</p>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold text-gray-800">Current Topic</h3>
-            <p className="text-sm text-gray-600">{mockData.currentTopic}</p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-gray-800">Related Topics</h3>
-            <div className="space-y-2 mt-2">
-              {mockData.relatedTopics.map(topic => (
-                <div key={topic.id} className="p-2 bg-gray-50 rounded-md">
-                  <h4 className="text-sm font-medium text-gray-800">{topic.title}</h4>
-                  <p className="text-xs text-gray-600">{topic.description}</p>
-                </div>
-              ))}
+                <p className="text-sm text-gray-600 mb-4">{status}</p>
+                {lines.map((line, idx) => renderTranscriptionLine(line, idx))}
             </div>
-          </div>
-        </div>
+
+            {/* Agenda View */}
+            <div className={`space-y-4 ${showAgenda ? 'visible' : 'invisible'}`}>
+              <ConvoDisplay />  
+            </div>
       </div>
       <Thinker lines={lines} />
     </div>
