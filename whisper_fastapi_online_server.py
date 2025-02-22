@@ -2,7 +2,7 @@ import io
 import argparse
 import asyncio
 import numpy as np
-import ffmpeg
+import subprocess
 from time import time, sleep
 from contextlib import asynccontextmanager
 
@@ -106,16 +106,19 @@ async def start_ffmpeg_decoder():
     Start an FFmpeg process in async streaming mode that reads WebM from stdin
     and outputs raw s16le PCM on stdout. Returns the process object.
     """
-    process = (
-        ffmpeg.input("pipe:0", format="webm")
-        .output(
-            "pipe:1",
-            format="s16le",
-            acodec="pcm_s16le",
-            ac=CHANNELS,
-            ar=str(SAMPLE_RATE),
-        )
-        .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+    process = subprocess.Popen(
+        [
+            "ffmpeg",
+            "-i", "pipe:0",
+            "-f", "webm",
+            "-ar", "16000",
+            "-ac", "1",
+            "-f", "s16le",
+            "-",
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
     )
     return process
 

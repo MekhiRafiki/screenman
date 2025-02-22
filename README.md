@@ -1,4 +1,7 @@
-# Whisper Streaming Web: Real-time Speech-to-Text with FastAPI WebSocket
+# Screenman
+"Aye Screenman" - A Realtime Transcriber and Web Researcher for Podcasters and other Live Audio Hosts to have relevant information at a glance.
+
+Uses an open source library to run a backend server for transcribing microphone audio with OpenAI Whisper API.
 
 This project is based on [Whisper Streaming](https://github.com/ufal/whisper_streaming) and lets you transcribe audio directly from your browser. Simply launch the local server and grant microphone access. Everything runs locally on your machine ✨
 
@@ -34,18 +37,21 @@ This project is based on [Whisper Streaming](https://github.com/ufal/whisper_str
    ```
 
 
-### How to Launch the Server
+### How to Launch the Backend Whisper Server
 
 1. **Dependencies**:
 
 - Install required dependences :
 
     ```bash
+    python3 -m venv venv && source venv/bin/activate
+    <!-- pip install -r requirements.txt -->
+
     # Whisper streaming required dependencies
     pip install librosa soundfile
 
     # Whisper streaming web required dependencies
-    pip install fastapi ffmpeg-python
+    pip install fastapi ffmpeg-python openai 
     ```
 - Install at least one whisper backend among:
 
@@ -77,7 +83,7 @@ This project is based on [Whisper Streaming](https://github.com/ufal/whisper_str
 3. **Run the FastAPI Server**:
 
     ```bash
-    python whisper_fastapi_online_server.py --host 0.0.0.0 --port 8000
+     source venv/bin/activate &&  python whisper_fastapi_online_server.py --host 0.0.0.0 --port 8000
     ```
 
     - `--host` and `--port` let you specify the server’s IP/port. 

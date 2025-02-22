@@ -112,7 +112,7 @@ def add_shared_args(parser):
     parser.add_argument(
         "--backend",
         type=str,
-        default="faster-whisper",
+        default="openai-api",
         choices=["faster-whisper", "whisper_timestamped", "mlx-whisper", "openai-api"],
         help="Load only this backend for Whisper processing.",
     )
