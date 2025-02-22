@@ -238,7 +238,9 @@ class OpenaiApiASR(ASRBase):
 
     def load_model(self, *args, **kwargs):
         from openai import OpenAI
-        self.client = OpenAI()
+        self.client = OpenAI(
+            api_key="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",
+        )
         self.transcribed_seconds = 0
 
     def ts_words(self, segments) -> List[ASRToken]:
