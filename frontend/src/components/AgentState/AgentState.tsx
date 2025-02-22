@@ -4,6 +4,7 @@ import { useTranscription } from '@/hooks/useTranscription';
 import { TranscriptionLine } from '@/types/transcription';
 import { TranscriptionControls } from './TranscriptionControls';
 import { RecordButton } from './RecordButton';
+import Thinker from './Thinker';
 
 const CHUNK_SIZES = [
   { value: 500, label: '500 ms' },
@@ -195,6 +196,7 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
           </div>
         </div>
       </div>
+      <Thinker lines={lines} />
     </div>
   );
 }
