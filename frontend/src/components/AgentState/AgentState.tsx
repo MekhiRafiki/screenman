@@ -151,15 +151,15 @@ export default function AgentState() {
 
       <div className="flex-1 overflow-y-auto mb-4 relative">
         {/* Transcript View */}
-        <div className={`space-y-4 ${showAgenda ? 'invisible' : 'visible'}`}>
-                <p className="text-sm text-gray-600 mb-4">{status}</p>
-                {lines.map((line, idx) => renderTranscriptionLine(line, idx))}
-            </div>
+        <div className={`space-y-4 absolute inset-0 w-full ${showAgenda ? 'invisible' : 'visible'}`}>
+          <p className="text-sm text-gray-600 mb-4">{status}</p>
+          {lines.map((line, idx) => renderTranscriptionLine(line, idx))}
+        </div>
 
-            {/* Agenda View */}
-            <div className={`space-y-4 ${showAgenda ? 'visible' : 'invisible'}`}>
-              <ConvoDisplay />  
-            </div>
+        {/* Agenda View */}
+        <div className={`space-y-4 absolute inset-0 w-full ${showAgenda ? 'visible' : 'invisible'}`}>
+          <ConvoDisplay />
+        </div>
       </div>
       <Thinker lines={lines} />
     </div>

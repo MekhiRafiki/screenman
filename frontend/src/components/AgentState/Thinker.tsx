@@ -2,6 +2,8 @@
 import { TranscriptionLine } from '@/types/transcription';
 import { useRef, useState, useEffect } from 'react';
 import { useScheduledProcess } from '@/hooks/useScheduledProcess';
+import { useTranscriptionContext } from '@/context/TranscriptionContext';
+import { DiscernResponse } from '@/types/research';
 
 type ThinkingState = 'listening' | 'thinking' | 'researching';
 
@@ -9,18 +11,21 @@ export default function Thinker({lines}: {lines: TranscriptionLine[]}) {
     const [currentState, setCurrentState] = useState<ThinkingState>('listening');
     const lastProcessedIndex = useRef<number>(0);
     const linesRef = useRef<TranscriptionLine[]>(lines);
+    const { 
+        highLevelSummary, 
+        currentTopic, 
+        pastTopics, 
+        updateHighLevelSummary, 
+        updateCurrentTopic, 
+        updatePastTopics, 
+        updateAdjacentTopics } = useTranscriptionContext();
 
-    // Keep linesRef up to date
-    useEffect(() => {
-        linesRef.current = lines;
-    }, [lines]);
-
-    // Update lastProcessedIndex when lines array changes
-    useEffect(() => {
-        if (lines.length === 0) {
-            lastProcessedIndex.current = 0;
+    const handleDiscernData = (discernData: DiscernResponse) => {
+        if (discernData.newCurrentTopic) {
+            updatePastTopics(pastTopics.concat(discernData.newCurrentTopic));
+            updateCurrentTopic(discernData.newCurrentTopic);
         }
-    }, [lines]);
+    }
 
     const processStates = async () => {
         // Check if we have enough new lines to process
@@ -60,11 +65,18 @@ export default function Thinker({lines}: {lines: TranscriptionLine[]}) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    newLines,
+                    highLevelSummary,
+                    currentTopic,
+                    newLines
                 }),
             });
-            const discernData = await discernResponse.json();
+            const discernData: DiscernResponse = await discernResponse.json();
             console.log('Discern response:', discernData);
+            if (!discernData.newCurrentTopic && !discernData.claims) {
+                console.log('No New information retrieved during discernment');
+                return false;
+            }
+            handleDiscernData(discernData);
 
             // Start research phase
             setCurrentState('researching');
@@ -75,8 +87,7 @@ export default function Thinker({lines}: {lines: TranscriptionLine[]}) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    newLines,
-                    discernResult: discernData,
+                    claims: discernData.claims
                 }),
             });
             const researchData = await researchResponse.json();
@@ -113,6 +124,23 @@ export default function Thinker({lines}: {lines: TranscriptionLine[]}) {
                 return 'Researching...';
         }
     };
+
+    // Keep linesRef up to date
+    useEffect(() => {
+        linesRef.current = lines;
+    }, [lines]);
+
+    // Update lastProcessedIndex when lines array changes
+    useEffect(() => {
+        if (lines.length === 0) {
+            lastProcessedIndex.current = 0;
+        }
+    }, [lines]);
+
+    // TODO(mj): every once in a while, check to see if we need to update the high-level summary
+    // if (discernData.newHighLevelSummary) {
+    //     updateHighLevelSummary(discernData.newHighLevelSummary);
+    // }
 
     return (
         <div className="text-lg font-medium text-gray-600 w-full text-end">

@@ -1,12 +1,7 @@
+import { Topic } from '@/types/research';
 import React, { createContext, useContext, useState } from 'react';
 
 export type TranscriptionMode = 'microphone' | 'file';
-
-interface Topic {
-  title: string;
-  description: string;
-  timestamp?: string;
-}
 
 interface TranscriptionContextType {
   // Audiio Intake mode
