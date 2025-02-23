@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranscription } from '@/hooks/useTranscription';
 import { TranscriptionLine } from '@/types/transcription';
 import { TranscriptionControls } from './Transcript/TranscriptionControls';
@@ -16,14 +16,15 @@ const CHUNK_SIZES = [
   { value: 5000, label: '5000 ms' },
 ];
 
-
 export default function AgentState() {
   const [websocketUrl, setWebsocketUrl] = useState('ws://localhost:8000/asr');
   const [chunkDuration, setChunkDuration] = useState(1000);
   const [showAgenda, setShowAgenda] = useState(false);
-  const { isRecording, status, lines, buffer, toggleRecording } = useTranscription();
+  const [status, setStatus] = useState('Waiting for input...');
+  const transcriptRef = useRef<HTMLDivElement>(null);
+  const [transcriptScrollPos, setTranscriptScrollPos] = useState(0);
 
-
+  const { isRecording, lines, buffer, toggleRecording } = useTranscription();
 
   const handleWebsocketUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value.trim();
@@ -32,6 +33,20 @@ export default function AgentState() {
     }
     setWebsocketUrl(url);
   };
+
+  const handleViewSwitch = () => {
+    // Save transcript scroll position before switching
+    if (showAgenda === false && transcriptRef.current) {
+      setTranscriptScrollPos(transcriptRef.current.scrollTop);
+    }
+    setShowAgenda(!showAgenda);
+  };
+
+  useEffect(() => {
+    if (!showAgenda && transcriptRef.current) {
+      transcriptRef.current.scrollTop = transcriptScrollPos;
+    }
+  }, [showAgenda]);
 
   const renderTranscriptionLine = (item: TranscriptionLine, idx: number) => {
     const timeInfo = item.beg && item.end ? ` ${item.beg} - ${item.end}` : '';
@@ -128,7 +143,7 @@ export default function AgentState() {
       </div>
       <div className="my-2 flex gap-2">
         <button
-          onClick={() => setShowAgenda(false)}
+          onClick={() => handleViewSwitch()}
           className={`flex-1 py-2 rounded-md transition-colors ${
             !showAgenda 
               ? 'bg-blue-600 text-white' 
@@ -138,7 +153,7 @@ export default function AgentState() {
           Transcript
         </button>
         <button
-          onClick={() => setShowAgenda(true)}
+          onClick={() => handleViewSwitch()}
           className={`flex-1 py-2 rounded-md transition-colors ${
             showAgenda 
               ? 'bg-blue-600 text-white' 
@@ -151,13 +166,22 @@ export default function AgentState() {
 
       <div className="flex-1 overflow-y-auto mb-4 relative">
         {/* Transcript View */}
-        <div className={`space-y-4 absolute inset-0 w-full ${showAgenda ? 'invisible' : 'visible'}`}>
+        <div 
+          ref={transcriptRef}
+          className={`absolute inset-0 overflow-y-auto transition-opacity duration-200 ${
+            showAgenda ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+        >
           <p className="text-sm text-gray-600 mb-4">{status}</p>
           {lines.map((line, idx) => renderTranscriptionLine(line, idx))}
         </div>
 
         {/* Agenda View */}
-        <div className={`space-y-4 absolute inset-0 w-full ${showAgenda ? 'visible' : 'invisible'}`}>
+        <div 
+          className={`absolute inset-0 overflow-y-auto transition-opacity duration-200 ${
+            showAgenda ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
           <ConvoDisplay />
         </div>
       </div>
