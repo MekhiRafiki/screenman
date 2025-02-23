@@ -89,7 +89,7 @@ export const useTranscription = () => {
             
             // Wait for 1 second before next line
             await new Promise(resolve => {
-              fileSimulationRef.current = setTimeout(resolve, 1000);
+              fileSimulationRef.current = setTimeout(resolve, 600);
             });
           }
           

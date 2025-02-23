@@ -50,7 +50,7 @@ export default function Thinker({lines}: {lines: TranscriptionLine[]}) {
             currentLines
         });
 
-        if (newLinesCount < 3) {
+        if (newLinesCount < 20) {
             setCurrentState('listening');
             console.log('Waiting for more lines...', {
                 current: lastProcessedIndex.current,

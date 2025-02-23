@@ -65,12 +65,12 @@ const initialConversationState = {
 };
 
 export const TranscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [mode, setMode] = useState<TranscriptionMode>('microphone');
-  const [highLevelSummary, setHighLevelSummary] = useState<string>(initialConversationState.highLevelSummary);
-  const [currentTopic, setCurrentTopic] = useState<Topic | null>(initialConversationState.currentTopic);
-  const [pastTopics, setPastTopics] = useState<Topic[]>(initialConversationState.pastTopics);
-  const [adjacentTopics, setAdjacentTopics] = useState<Topic[]>(initialConversationState.adjacentTopics);
-  const [stageProposals, setStageProposals] = useState<ResearchStageProposals[]>(initialConversationState.stageProposals);
+  const [mode, setMode] = useState<TranscriptionMode>('microphone')
+  const [highLevelSummary, setHighLevelSummary] = useState<string>("") // initialConversationState.highLevelSummary
+  const [currentTopic, setCurrentTopic] = useState<Topic | null>(null) //initialConversationState.currentTopic
+  const [pastTopics, setPastTopics] = useState<Topic[]>([]) //initialConversationState.pastTopics
+  const [adjacentTopics, setAdjacentTopics] = useState<Topic[]>([]) // initialConversationState.adjacentTopics
+  const [stageProposals, setStageProposals] = useState<ResearchStageProposals[]>([]) // initialConversationState.stageProposals
 
   const toggleMode = () => {
     setMode(prev => prev === 'microphone' ? 'file' : 'microphone');

@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         const queryGenerator = model.withStructuredOutput(searchQueriesSchema);
         const searchQueries = await queryGenerator.invoke(QUERY_GENERATION_PROMPT.replace(
             "{currentTopic}",
-            `${currentTopic.title} - ${currentTopic.description}`
+            currentTopic ? `${currentTopic?.title} - ${currentTopic?.description}` : 'No established topic at the moment'
         ));
 
         // Step 2: Execute searches and gather results with delay
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
         const researchAnalyzer = model.withStructuredOutput(proposalsSchema);
         const analysis = await researchAnalyzer.invoke(
             RESEARCH_ANALYSIS_PROMPT
-                .replace("{currentTopic}", `${currentTopic.title} - ${currentTopic.description}`)
+                .replace("{currentTopic}", currentTopic ? `${currentTopic?.title} - ${currentTopic?.description}` : 'No established topic at the moment')
                 .replace("{claims}", claims.join("\n"))
                 .replace("{searchResults}", JSON.stringify(searchResults, null, 2))
         );
