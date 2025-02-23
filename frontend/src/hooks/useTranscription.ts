@@ -76,18 +76,23 @@ export const useTranscription = () => {
     // File simulation functions
     const simulateFileTranscription = useCallback(async () => {
       try {
-        const response = await fetch('/data/jbp_eagles.txt');
+        const response = await fetch('/data/jbp_allstar.txt');
         const text = await response.text();
         const allLines = text.split('\n').filter(line => line.trim());
         
         const processLines = async () => {
-          for (let i = 0; i < allLines.length ; i++) { // && isRecording
-            setLines(prev => [...prev, {
-              speaker: 1,
-              text: allLines[i],
-            }]);
+          const BATCH_SIZE = 3;
+          for (let i = 0; i < allLines.length; i += BATCH_SIZE) {
+            const batch = allLines.slice(i, i + BATCH_SIZE);
+            setLines(prev => [
+              ...prev,
+              ...batch.map(line => ({
+                speaker: 1,
+                text: line,
+              }))
+            ]);
             
-            // Wait for 1 second before next line
+            // Wait for 1 second before next batch
             await new Promise(resolve => {
               fileSimulationRef.current = setTimeout(resolve, 600);
             });
@@ -147,6 +152,7 @@ export const useTranscription = () => {
       try {
         await startRecording(websocketUrl, chunkDuration);
       } catch (err) {
+        console.error(err);
         setStatus('Could not start transcription. Aborted.');
       }
     } else {
