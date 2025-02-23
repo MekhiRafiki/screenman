@@ -30,11 +30,11 @@ export default function ConvoDisplay() {
                                 <div key={index} className="p-2 bg-gray-50 rounded-md">
                                     <h4 className="text-sm font-medium text-gray-800">{topic.title}</h4>
                                     <p className="text-xs text-gray-600">{topic.description}</p>
-                                    {topic.timestamp && (
+                                    {/* {topic.timestamp && (
                                         <p className="text-xs text-gray-400 mt-1">
                                             {new Date(topic.timestamp).toLocaleTimeString()}
                                         </p>
-                                    )}
+                                    )} */}
                                 </div>
                             ))}
                         </div>
@@ -48,11 +48,11 @@ export default function ConvoDisplay() {
                     <div className="p-2 bg-gray-50 rounded-md">
                         <h4 className="text-sm font-medium text-gray-800">{currentTopic.title}</h4>
                         <p className="text-xs text-gray-600">{currentTopic.description}</p>
-                        {currentTopic.timestamp && (
+                        {/* {currentTopic.timestamp && (
                             <p className="text-xs text-gray-400 mt-1">
                                 {new Date(currentTopic.timestamp).toLocaleTimeString()}
                             </p>
-                        )}
+                        )} */}
                     </div>
                 </div>
             )}

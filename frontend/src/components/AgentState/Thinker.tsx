@@ -3,7 +3,7 @@ import { TranscriptionLine } from '@/types/transcription';
 import { useRef, useState, useEffect } from 'react';
 import { useScheduledProcess } from '@/hooks/useScheduledProcess';
 import { useTranscriptionContext } from '@/context/TranscriptionContext';
-import { DiscernResponse } from '@/types/research';
+import { DiscernResponse, ResearchResponse } from '@/types/research';
 
 type ThinkingState = 'listening' | 'thinking' | 'researching';
 
@@ -15,15 +15,26 @@ export default function Thinker({lines}: {lines: TranscriptionLine[]}) {
         highLevelSummary, 
         currentTopic, 
         pastTopics, 
+        stageProposals,
         updateHighLevelSummary, 
         updateCurrentTopic, 
         updatePastTopics, 
-        updateAdjacentTopics } = useTranscriptionContext();
+        updateAdjacentTopics,
+        updateStageProposals } = useTranscriptionContext();
 
     const handleDiscernData = (discernData: DiscernResponse) => {
         if (discernData.newCurrentTopic) {
             updatePastTopics(pastTopics.concat(discernData.newCurrentTopic));
             updateCurrentTopic(discernData.newCurrentTopic);
+        }
+    }
+
+    const handleResearchData = (researchData: ResearchResponse) => {
+        if (researchData.newAdjacentTopics){
+            updateAdjacentTopics(researchData.newAdjacentTopics);
+        }
+        if (researchData.newStageProposals){
+            updateStageProposals(stageProposals.concat(researchData.newStageProposals));
         }
     }
 
@@ -87,11 +98,13 @@ export default function Thinker({lines}: {lines: TranscriptionLine[]}) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    currentTopic,
                     claims: discernData.claims
                 }),
             });
             const researchData = await researchResponse.json();
             console.log('Research response:', researchData);
+            handleResearchData(researchData);
 
             // Update the last processed index only after successful processing
             const previousIndex = lastProcessedIndex.current;
