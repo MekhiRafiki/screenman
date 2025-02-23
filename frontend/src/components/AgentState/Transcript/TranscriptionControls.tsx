@@ -15,7 +15,7 @@ export const TranscriptionControls: React.FC = () => {
         }`}
         title="Switch to microphone mode"
       >
-        Live Audio
+        Live
       </button>
       <button
         onClick={() => mode !== 'file' && toggleMode()}

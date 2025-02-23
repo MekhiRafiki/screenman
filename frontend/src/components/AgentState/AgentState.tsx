@@ -141,6 +141,7 @@ export default function AgentState() {
           </div>
         </div>
       </div>
+      <Thinker lines={lines} />
       <div className="my-2 flex gap-2">
         <button
           onClick={() => handleViewSwitch()}
@@ -163,8 +164,8 @@ export default function AgentState() {
           Conversation
         </button>
       </div>
-
       <div className="flex-1 overflow-y-auto mb-4 relative">
+        
         {/* Transcript View */}
         <div 
           ref={transcriptRef}
@@ -185,7 +186,6 @@ export default function AgentState() {
           <ConvoDisplay />
         </div>
       </div>
-      <Thinker lines={lines} />
     </div>
   );
 }

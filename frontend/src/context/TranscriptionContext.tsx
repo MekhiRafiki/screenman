@@ -24,10 +24,10 @@ const TranscriptionContext = createContext<TranscriptionContextType | undefined>
 
 // Initial mock data
 const initialConversationState = {
-  highLevelSummary: "Today's focus is on improving the speech recognition system and implementing new features.",
+  highLevelSummary: "The latest season of Love is Blind set in Minneapolis, Minnesota.",
   currentTopic: {
-    title: "Speech Recognition Enhancement",
-    description: "Improving the core speech recognition capabilities",
+    title: "LIB Season's Lack of Drama",
+    description: "Discussion about how the Minneapolis cohort seems less engaging compared to previous seasons, with fewer memorable moments and less compelling storylines.",
     timestamp: new Date().toISOString()
   },
   pastTopics: [],
@@ -67,8 +67,8 @@ const initialConversationState = {
 export const TranscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<TranscriptionMode>('microphone')
   const [highLevelSummary, setHighLevelSummary] = useState<string>("") // initialConversationState.highLevelSummary
-  const [currentTopic, setCurrentTopic] = useState<Topic | null>(null) //initialConversationState.currentTopic
-  const [pastTopics, setPastTopics] = useState<Topic[]>([]) //initialConversationState.pastTopics
+  const [currentTopic, setCurrentTopic] = useState<Topic | null>(null) // initialConversationState.currentTopic
+  const [pastTopics, setPastTopics] = useState<Topic[]>([]) // initialConversationState.pastTopics
   const [adjacentTopics, setAdjacentTopics] = useState<Topic[]>([]) // initialConversationState.adjacentTopics
   const [stageProposals, setStageProposals] = useState<ResearchStageProposals[]>([]) // initialConversationState.stageProposals
 
