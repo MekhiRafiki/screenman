@@ -1,7 +1,11 @@
 "use client"
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranscription } from '@/hooks/useTranscription';
 import { TranscriptionLine } from '@/types/transcription';
+import { TranscriptionControls } from './Transcript/TranscriptionControls';
+import { RecordButton } from './Transcript/RecordButton';
+import Thinker from './Thinker';
+import ConvoDisplay from './Conversation/ConvoDisplay';
 
 const CHUNK_SIZES = [
   { value: 500, label: '500 ms' },
@@ -12,26 +16,15 @@ const CHUNK_SIZES = [
   { value: 5000, label: '5000 ms' },
 ];
 
-interface AgentStateProps {
-  onTranscriptUpdate?: (text: string) => void;
-}
-
-export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
+export default function AgentState() {
   const [websocketUrl, setWebsocketUrl] = useState('ws://localhost:8000/asr');
   const [chunkDuration, setChunkDuration] = useState(1000);
   const [showAgenda, setShowAgenda] = useState(false);
-  const { isRecording, status, lines, buffer, toggleRecording } = useTranscription();
+  const [status, setStatus] = useState('Waiting for input...');
+  const transcriptRef = useRef<HTMLDivElement>(null);
+  const [transcriptScrollPos, setTranscriptScrollPos] = useState(0);
 
-  // Mock data for agenda and topics
-  const mockData = {
-    agenda: "Today's focus is on improving the speech recognition system and implementing new features.",
-    currentTopic: "Speech Recognition Enhancement",
-    relatedTopics: [
-      { id: 1, title: "WebSocket Integration", description: "Real-time data streaming implementation" },
-      { id: 2, title: "UI/UX Improvements", description: "Enhanced user interface design" },
-      { id: 3, title: "Performance Optimization", description: "System response time improvement" },
-    ]
-  };
+  const { isRecording, lines, buffer, toggleRecording } = useTranscription();
 
   const handleWebsocketUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value.trim();
@@ -40,6 +33,20 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
     }
     setWebsocketUrl(url);
   };
+
+  const handleViewSwitch = () => {
+    // Save transcript scroll position before switching
+    if (showAgenda === false && transcriptRef.current) {
+      setTranscriptScrollPos(transcriptRef.current.scrollTop);
+    }
+    setShowAgenda(!showAgenda);
+  };
+
+  useEffect(() => {
+    if (!showAgenda && transcriptRef.current) {
+      transcriptRef.current.scrollTop = transcriptScrollPos;
+    }
+  }, [showAgenda]);
 
   const renderTranscriptionLine = (item: TranscriptionLine, idx: number) => {
     const timeInfo = item.beg && item.end ? ` ${item.beg} - ${item.end}` : '';
@@ -79,10 +86,6 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
     const textContent = item.text + (idx === lines.length - 1 && buffer ? 
       <span className="italic text-gray-400 ml-1">{buffer}</span> : '');
 
-    // Update the main display text
-    if (onTranscriptUpdate && item.text) {
-      onTranscriptUpdate(item.text);
-    }
 
     return (
       <div key={idx} className="mb-4">
@@ -97,14 +100,13 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => toggleRecording(websocketUrl, chunkDuration)}
-          className={`w-16 h-16 text-3xl rounded-full shadow-lg transition-all ${
-            isRecording ? 'bg-red-500 text-white' : 'bg-white text-gray-700'
-          } hover:scale-105 active:scale-95`}
-        >
-          🎙️
-        </button>
+        <div className='flex flex-col items-center gap-2'>
+          <TranscriptionControls />
+          <RecordButton 
+            isRecording={isRecording}
+            onToggle={() => toggleRecording(websocketUrl, chunkDuration)}
+          />
+        </div>
 
         <div className="space-y-3">
           <div>
@@ -141,7 +143,7 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
       </div>
       <div className="my-2 flex gap-2">
         <button
-          onClick={() => setShowAgenda(false)}
+          onClick={() => handleViewSwitch()}
           className={`flex-1 py-2 rounded-md transition-colors ${
             !showAgenda 
               ? 'bg-blue-600 text-white' 
@@ -151,7 +153,7 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
           Transcript
         </button>
         <button
-          onClick={() => setShowAgenda(true)}
+          onClick={() => handleViewSwitch()}
           className={`flex-1 py-2 rounded-md transition-colors ${
             showAgenda 
               ? 'bg-blue-600 text-white' 
@@ -164,36 +166,26 @@ export function AgentState({ onTranscriptUpdate }: AgentStateProps) {
 
       <div className="flex-1 overflow-y-auto mb-4 relative">
         {/* Transcript View */}
-        <div className={`space-y-4 ${showAgenda ? 'invisible' : 'visible'}`}>
+        <div 
+          ref={transcriptRef}
+          className={`absolute inset-0 overflow-y-auto transition-opacity duration-200 ${
+            showAgenda ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+        >
           <p className="text-sm text-gray-600 mb-4">{status}</p>
           {lines.map((line, idx) => renderTranscriptionLine(line, idx))}
         </div>
 
         {/* Agenda View */}
-        <div className={`space-y-4 ${showAgenda ? 'visible' : 'invisible'}`}>
-          <div>
-            <h3 className="font-semibold text-gray-800">Conversation Agenda</h3>
-            <p className="text-sm text-gray-600">{mockData.agenda}</p>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold text-gray-800">Current Topic</h3>
-            <p className="text-sm text-gray-600">{mockData.currentTopic}</p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-gray-800">Related Topics</h3>
-            <div className="space-y-2 mt-2">
-              {mockData.relatedTopics.map(topic => (
-                <div key={topic.id} className="p-2 bg-gray-50 rounded-md">
-                  <h4 className="text-sm font-medium text-gray-800">{topic.title}</h4>
-                  <p className="text-xs text-gray-600">{topic.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div 
+          className={`absolute inset-0 overflow-y-auto transition-opacity duration-200 ${
+            showAgenda ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <ConvoDisplay />
         </div>
       </div>
+      <Thinker lines={lines} />
     </div>
   );
 }

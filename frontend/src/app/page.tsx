@@ -1,13 +1,16 @@
-import { AgentState } from '@/components/AgentState'
+"use client"
+import AgentState from '@/components/AgentState/AgentState'
 import Stage from '@/components/Stage';
+import { TranscriptionProvider } from '@/context/TranscriptionContext';
 
 export default function Home() {
 
   return (
+  <TranscriptionProvider>
     <div className="flex h-screen">
       {/* Left sidebar with AgentState */}
       <div className="w-1/3 max-w-md border-r border-gray-200 p-4 bg-white overflow-y-auto">
-        <AgentState />
+          <AgentState />
       </div>
 
       {/* Main content area with Jeopardy-style display */}
@@ -17,5 +20,7 @@ export default function Home() {
         </div>
       </div>
     </div>
+    </TranscriptionProvider>
+
   );
 }
