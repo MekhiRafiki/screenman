@@ -10,9 +10,11 @@ from src.whisper_streaming.timed_objects import ASRToken
 
 logger = logging.getLogger(__name__)
 
+
 class ASRBase:
-    sep = " "  # join transcribe words with this character (" " for whisper_timestamped,
-              # "" for faster-whisper because it emits the spaces when needed)
+    # join transcribe words with this character (" " for whisper_timestamped,
+    sep = " "
+    # "" for faster-whisper because it emits the spaces when needed)
 
     def __init__(self, lan, modelsize=None, cache_dir=None, model_dir=None, logfile=sys.stderr):
         self.logfile = logfile
@@ -156,11 +158,13 @@ class MLXWhisper(ASRBase):
         import mlx.core as mx
 
         if model_dir is not None:
-            logger.debug(f"Loading whisper model from model_dir {model_dir}. modelsize parameter is not used.")
+            logger.debug(
+                f"Loading whisper model from model_dir {model_dir}. modelsize parameter is not used.")
             model_size_or_path = model_dir
         elif modelsize is not None:
             model_size_or_path = self.translate_model_name(modelsize)
-            logger.debug(f"Loading whisper model {modelsize}. You use mlx whisper, so {model_size_or_path} will be used.")
+            logger.debug(
+                f"Loading whisper model {modelsize}. You use mlx whisper, so {model_size_or_path} will be used.")
         else:
             raise ValueError("Either modelsize or model_dir must be set")
 
@@ -189,11 +193,13 @@ class MLXWhisper(ASRBase):
         if mlx_model_path:
             return mlx_model_path
         else:
-            raise ValueError(f"Model name '{model_name}' is not recognized or not supported.")
+            raise ValueError(
+                f"Model name '{model_name}' is not recognized or not supported.")
 
     def transcribe(self, audio, init_prompt=""):
         if self.transcribe_kargs:
-            logger.warning("Transcribe kwargs (vad, task) are not compatible with MLX Whisper and will be ignored.")
+            logger.warning(
+                "Transcribe kwargs (vad, task) are not compatible with MLX Whisper and will be ignored.")
         segments = self.model(
             audio,
             language=self.original_language,
@@ -226,6 +232,7 @@ class MLXWhisper(ASRBase):
 
 class OpenaiApiASR(ASRBase):
     """Uses OpenAI's Whisper API for transcription."""
+
     def __init__(self, lan=None, temperature=0, logfile=sys.stderr):
         self.logfile = logfile
         self.modelname = "whisper-1"
@@ -239,7 +246,7 @@ class OpenaiApiASR(ASRBase):
     def load_model(self, *args, **kwargs):
         from openai import OpenAI
         self.client = OpenAI(
-            api_key="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",
+            api_key="api-key",
         )
         self.transcribed_seconds = 0
 
@@ -252,7 +259,8 @@ class OpenaiApiASR(ASRBase):
         if self.use_vad_opt:
             for segment in segments.segments:
                 if segment["no_speech_prob"] > 0.8:
-                    no_speech_segments.append((segment.get("start"), segment.get("end")))
+                    no_speech_segments.append(
+                        (segment.get("start"), segment.get("end")))
         tokens = []
         for word in segments.words:
             start = word.start
@@ -268,7 +276,8 @@ class OpenaiApiASR(ASRBase):
     def transcribe(self, audio_data, prompt=None, *args, **kwargs):
         buffer = io.BytesIO()
         buffer.name = "temp.wav"
-        sf.write(buffer, audio_data, samplerate=16000, format="WAV", subtype="PCM_16")
+        sf.write(buffer, audio_data, samplerate=16000,
+                 format="WAV", subtype="PCM_16")
         buffer.seek(0)
         self.transcribed_seconds += math.ceil(len(audio_data) / 16000)
         params = {
@@ -284,7 +293,8 @@ class OpenaiApiASR(ASRBase):
             params["prompt"] = prompt
         proc = self.client.audio.translations if self.task == "translate" else self.client.audio.transcriptions
         transcript = proc.create(**params)
-        logger.debug(f"OpenAI API processed accumulated {self.transcribed_seconds} seconds")
+        logger.debug(
+            f"OpenAI API processed accumulated {self.transcribed_seconds} seconds")
         return transcript
 
     def use_vad(self):
