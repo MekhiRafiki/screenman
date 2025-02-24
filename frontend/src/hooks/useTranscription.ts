@@ -81,7 +81,7 @@ export const useTranscription = () => {
         const allLines = text.split('\n').filter(line => line.trim());
         
         const processLines = async () => {
-          const BATCH_SIZE = 3;
+          const BATCH_SIZE = 1;
           for (let i = 0; i < allLines.length; i += BATCH_SIZE) {
             const batch = allLines.slice(i, i + BATCH_SIZE);
             setLines(prev => [
@@ -94,7 +94,7 @@ export const useTranscription = () => {
             
             // Wait for 1 second before next batch
             await new Promise(resolve => {
-              fileSimulationRef.current = setTimeout(resolve, 600);
+              fileSimulationRef.current = setTimeout(resolve, 1200);
             });
           }
           

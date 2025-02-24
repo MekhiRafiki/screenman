@@ -148,8 +148,8 @@ export default function Thinker({ lines }: { lines: TranscriptionLine[] }) {
 		}
 	}
 
-	// Schedule the process to run every 6 seconds
-	useScheduledProcess(processStates, 6000)
+	// Schedule the process to run every 10 seconds
+	useScheduledProcess(processStates, 10000)
 
 	const getDisplayText = (state: ThinkingState) => {
 		switch (state) {

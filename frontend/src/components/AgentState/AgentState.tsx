@@ -1,191 +1,104 @@
 "use client"
-import { useState, useRef, useEffect } from 'react';
-import { useTranscription } from '@/hooks/useTranscription';
-import { TranscriptionLine } from '@/types/transcription';
-import { TranscriptionControls } from './Transcript/TranscriptionControls';
-import { RecordButton } from './Transcript/RecordButton';
-import Thinker from './Thinker';
-import ConvoDisplay from './Conversation/ConvoDisplay';
+import { useState } from "react"
+import { TranscriptionControls } from "./Transcript/TranscriptionControls"
+import { RecordButton } from "./Transcript/RecordButton"
+import Thinker from "./Thinker"
+import ConvoDisplay from "./Conversation/ConvoDisplay"
+import { TranscriptionLine } from "@/types/transcription"
 
 const CHUNK_SIZES = [
-  { value: 500, label: '500 ms' },
-  { value: 1000, label: '1000 ms' },
-  { value: 2000, label: '2000 ms' },
-  { value: 3000, label: '3000 ms' },
-  { value: 4000, label: '4000 ms' },
-  { value: 5000, label: '5000 ms' },
-];
+	{ value: 500, label: "500 ms" },
+	{ value: 1000, label: "1000 ms" },
+	{ value: 2000, label: "2000 ms" },
+	{ value: 3000, label: "3000 ms" },
+	{ value: 4000, label: "4000 ms" },
+	{ value: 5000, label: "5000 ms" },
+]
 
-export default function AgentState() {
-  const [websocketUrl, setWebsocketUrl] = useState('ws://localhost:8000/asr');
-  const [chunkDuration, setChunkDuration] = useState(1000);
-  const [showAgenda, setShowAgenda] = useState(false);
-  const [status, setStatus] = useState('Waiting for input...');
-  const transcriptRef = useRef<HTMLDivElement>(null);
-  const [transcriptScrollPos, setTranscriptScrollPos] = useState(0);
+export default function AgentState({
+	lines,
+	toggleRecording,
+	isRecording,
+}: {
+	lines: TranscriptionLine[]
+	toggleRecording: (
+		websocketUrl?: string,
+		chunkDuration?: number
+	) => Promise<void>
+	isRecording: boolean
+}) {
+	const [websocketUrl, setWebsocketUrl] = useState("ws://localhost:8000/asr")
+	const [chunkDuration, setChunkDuration] = useState(1000)
 
-  const { isRecording, lines, buffer, toggleRecording } = useTranscription();
+	const handleWebsocketUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const url = e.target.value.trim()
+		if (!url.startsWith("ws://") && !url.startsWith("wss://")) {
+			return
+		}
+		setWebsocketUrl(url)
+	}
 
-  const handleWebsocketUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value.trim();
-    if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
-      return;
-    }
-    setWebsocketUrl(url);
-  };
+	return (
+		<div className="flex flex-col h-full">
+			<div className="flex items-center gap-4 mb-6">
+				<div className="flex flex-col items-center gap-2">
+					<TranscriptionControls />
+					<RecordButton
+						isRecording={isRecording}
+						onToggle={() => toggleRecording(websocketUrl, chunkDuration)}
+					/>
+				</div>
 
-  const handleViewSwitch = () => {
-    // Save transcript scroll position before switching
-    if (showAgenda === false && transcriptRef.current) {
-      setTranscriptScrollPos(transcriptRef.current.scrollTop);
-    }
-    setShowAgenda(!showAgenda);
-  };
+				<div className="space-y-3">
+					<div>
+						<label
+							htmlFor="chunkSelector"
+							className="block text-sm text-gray-600 mb-1"
+						>
+							Chunk size (ms):
+						</label>
+						<select
+							id="chunkSelector"
+							value={chunkDuration}
+							onChange={(e) => setChunkDuration(Number(e.target.value))}
+							className="px-2 py-1 border rounded-md bg-gray-50 text-gray-700 text-sm"
+						>
+							{CHUNK_SIZES.map(({ value, label }) => (
+								<option key={value} value={value}>
+									{label}
+								</option>
+							))}
+						</select>
+					</div>
 
-  useEffect(() => {
-    if (!showAgenda && transcriptRef.current) {
-      transcriptRef.current.scrollTop = transcriptScrollPos;
-    }
-  }, [showAgenda]);
+					<div>
+						<label
+							htmlFor="websocketInput"
+							className="block text-sm text-gray-600 mb-1"
+						>
+							WebSocket URL:
+						</label>
+						<input
+							id="websocketInput"
+							type="text"
+							value={websocketUrl}
+							onChange={handleWebsocketUrlChange}
+							className="w-48 px-2 py-1 border rounded-md bg-gray-50 text-gray-700 text-sm"
+						/>
+					</div>
+				</div>
+			</div>
+			<Thinker lines={lines} />
 
-  const renderTranscriptionLine = (item: TranscriptionLine, idx: number) => {
-    const timeInfo = item.beg && item.end ? ` ${item.beg} - ${item.end}` : '';
-    let speakerLabel;
-
-    switch (item.speaker) {
-      case -2:
-        speakerLabel = (
-          <span className="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded-full">
-            Silence<span className="ml-2 text-gray-500">{timeInfo}</span>
-          </span>
-        );
-        break;
-      case -1:
-        speakerLabel = (
-          <span className="px-3 py-1 text-sm text-blue-600 bg-blue-50 rounded-full flex items-center">
-            <div className="w-2 h-2 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2" />
-            <span>{item.diff} second(s) of audio are undergoing diarization</span>
-          </span>
-        );
-        break;
-      case -3:
-        speakerLabel = (
-          <span className="px-3 py-1 text-sm text-gray-600 bg-blue-50 rounded-full">
-            <span className="text-gray-500">{timeInfo}</span>
-          </span>
-        );
-        break;
-      default:
-        speakerLabel = (
-          <span className="px-3 py-1 text-sm text-blue-600 bg-blue-50 rounded-full">
-            Speaker {item.speaker}<span className="ml-2 text-gray-500">{timeInfo}</span>
-          </span>
-        );
-    }
-
-    const textContent = item.text + (idx === lines.length - 1 && buffer ? 
-      <span className="italic text-gray-400 ml-1">{buffer}</span> : '');
-
-
-    return (
-      <div key={idx} className="mb-4">
-        {speakerLabel}
-        <div className="mt-2 pl-4 border-l-2 border-blue-50 text-gray-700">
-          {textContent}
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-4 mb-6">
-        <div className='flex flex-col items-center gap-2'>
-          <TranscriptionControls />
-          <RecordButton 
-            isRecording={isRecording}
-            onToggle={() => toggleRecording(websocketUrl, chunkDuration)}
-          />
-        </div>
-
-        <div className="space-y-3">
-          <div>
-            <label htmlFor="chunkSelector" className="block text-sm text-gray-600 mb-1">
-              Chunk size (ms):
-            </label>
-            <select
-              id="chunkSelector"
-              value={chunkDuration}
-              onChange={(e) => setChunkDuration(Number(e.target.value))}
-              className="px-2 py-1 border rounded-md bg-gray-50 text-gray-700 text-sm"
-            >
-              {CHUNK_SIZES.map(({ value, label }) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="websocketInput" className="block text-sm text-gray-600 mb-1">
-              WebSocket URL:
-            </label>
-            <input
-              id="websocketInput"
-              type="text"
-              value={websocketUrl}
-              onChange={handleWebsocketUrlChange}
-              className="w-48 px-2 py-1 border rounded-md bg-gray-50 text-gray-700 text-sm"
-            />
-          </div>
-        </div>
-      </div>
-      <Thinker lines={lines} />
-      <div className="my-2 flex gap-2">
-        <button
-          onClick={() => handleViewSwitch()}
-          className={`flex-1 py-2 rounded-md transition-colors ${
-            !showAgenda 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          Transcript
-        </button>
-        <button
-          onClick={() => handleViewSwitch()}
-          className={`flex-1 py-2 rounded-md transition-colors ${
-            showAgenda 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          Conversation
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto mb-4 relative">
-        
-        {/* Transcript View */}
-        <div 
-          ref={transcriptRef}
-          className={`absolute inset-0 overflow-y-auto transition-opacity duration-200 ${
-            showAgenda ? 'opacity-0 pointer-events-none' : 'opacity-100'
-          }`}
-        >
-          <p className="text-sm text-gray-600 mb-4">{status}</p>
-          {lines.map((line, idx) => renderTranscriptionLine(line, idx))}
-        </div>
-
-        {/* Agenda View */}
-        <div 
-          className={`absolute inset-0 overflow-y-auto transition-opacity duration-200 ${
-            showAgenda ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-        >
-          <ConvoDisplay />
-        </div>
-      </div>
-    </div>
-  );
+			<div className="flex-1 overflow-y-auto mb-4 relative">
+				<div
+					className={
+						"absolute inset-0 overflow-y-auto transition-opacity duration-200 opacity-100"
+					}
+				>
+					<ConvoDisplay />
+				</div>
+			</div>
+		</div>
+	)
 }
