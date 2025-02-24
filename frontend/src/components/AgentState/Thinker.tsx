@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react"
 import { useScheduledProcess } from "@/hooks/useScheduledProcess"
 import { useTranscriptionContext } from "@/context/TranscriptionContext"
 import { DiscernResponse, ResearchResponse, Topic } from "@/types/research"
+import { Brain, Ear, MonitorDot } from "lucide-react"
 
 type ThinkingState = "listening" | "thinking" | "researching"
 
@@ -76,7 +77,7 @@ export default function Thinker({ lines }: { lines: TranscriptionLine[] }) {
 			currentLines,
 		})
 
-		if (newLinesCount < 20) {
+		if (newLinesCount < 10) {
 			setCurrentState("listening")
 			console.log("Waiting for more lines...", {
 				current: lastProcessedIndex.current,
@@ -148,10 +149,10 @@ export default function Thinker({ lines }: { lines: TranscriptionLine[] }) {
 		}
 	}
 
-	// Schedule the process to run every 10 seconds
-	useScheduledProcess(processStates, 10000)
+	// Schedule the process to run every 8 seconds
+	useScheduledProcess(processStates, 8000)
 
-	const getDisplayText = (state: ThinkingState) => {
+	const getStateLabel = (state: ThinkingState) => {
 		switch (state) {
 			case "listening":
 				return "Listening..."
@@ -175,8 +176,54 @@ export default function Thinker({ lines }: { lines: TranscriptionLine[] }) {
 	}, [lines])
 
 	return (
-		<div className="text-lg font-medium text-gray-600 w-full text-end">
-			{getDisplayText(currentState)}
+		<div className="flex flex-col items-center justify-center gap-4">
+			<div className="relative w-32 h-32">
+				{/* Outer glow */}
+				<div className="absolute inset-0 rounded-full bg-white/20 blur-xl" />
+
+				{/* Gradient background with animation */}
+				<div
+					className="absolute inset-0 rounded-full animate-gradient-rotate"
+					style={{
+						background: "linear-gradient(-45deg, #60a5fa, #8b5cf6, #db2777)",
+						backgroundSize: "200% 200%",
+					}}
+				/>
+
+				{/* Inner white circle with icon */}
+				<div className="absolute inset-2 bg-white rounded-full shadow-inner flex items-center justify-center">
+					<div
+						className={`
+						transition-opacity duration-300 text-gray-700
+						${currentState === "listening" ? "opacity-100" : "opacity-0"}
+					`}
+					>
+						<Ear className="w-12 h-12" />
+					</div>
+					<div
+						className={`
+						absolute inset-0 flex items-center justify-center
+						transition-opacity duration-300
+						${currentState === "thinking" ? "opacity-100" : "opacity-0"}
+					`}
+					>
+						<Brain className="w-12 h-12" />
+					</div>
+					<div
+						className={`
+						absolute inset-0 flex items-center justify-center
+						transition-opacity duration-300
+						${currentState === "researching" ? "opacity-100" : "opacity-0"}
+					`}
+					>
+						<MonitorDot className="w-12 h-12" />
+					</div>
+				</div>
+			</div>
+
+			<div className="text-lg font-medium text-gray-600">
+				{getStateLabel(currentState)}
+			</div>
 		</div>
 	)
 }
