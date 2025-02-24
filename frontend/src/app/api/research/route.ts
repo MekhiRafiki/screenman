@@ -1,7 +1,8 @@
-import { ResearchResponse, Topic, ResearchStageProposals } from "@/types/research";
+import { ResearchResponse } from "@/types/research";
 import { ChatOpenAI } from "@langchain/openai";
 import { DuckDuckGoSearch } from "@langchain/community/tools/duckduckgo_search";
 import { z } from "zod";
+import { QUERY_GENERATION_PROMPT, RESEARCH_ANALYSIS_PROMPT } from "@/prompts/research";
 
 // Schema for generating optimized search queries
 const searchQueriesSchema = z.object({
@@ -33,42 +34,6 @@ const searchTool = new DuckDuckGoSearch({ maxResults: 3 });
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const QUERY_GENERATION_PROMPT = `You are an expert at converting conversation claims into effective search queries.
-Your task is to create optimized search queries that will help verify and expand upon the given claims.
-
-Current Topic: {currentTopic}
-
-For each claim, create 1-2 search queries that will:
-1. Help verify the accuracy of the claim
-2. Find additional context or related information
-3. Be optimized for web search (use quotes for exact phrases, focus on key terms)
-
-Format your response as structured output following the schema.`;
-
-const RESEARCH_ANALYSIS_PROMPT = `You are an expert at analyzing search results and extracting valuable insights.
-Your task is to create two types of content:
-
-1. Stage Proposals:
-   - Verify or correct the original claims
-   - Provide additional context and details
-   - Use specific facts from the search results
-   - Include relevant source URLs
-
-2. Adjacent Topics:
-   - Identify interesting related topics worth exploring
-   - Focus on topics that naturally flow from the current discussion
-   - Ensure topics are substantive and have enough depth for discussion
-
-Current Topic: {currentTopic}
-Original Claims:
-{claims}
-
-Search Results:
-{searchResults}
-
-Format your response as structured output following the schema.
-Focus on accuracy and relevance. Less is more - only include high-quality proposals and truly interesting adjacent topics.`;
-
 export async function POST(request: Request) {
     const { currentTopic, claims } = await request.json();
 
@@ -80,9 +45,11 @@ export async function POST(request: Request) {
             currentTopic ? `${currentTopic?.title} - ${currentTopic?.description}` : 'No established topic at the moment'
         ));
 
+        // Only take the first 3 queries if there are more
+        const limitedQueries = searchQueries.queries.slice(0, 3);
         // Step 2: Execute searches and gather results with delay
         const searchResults = [];
-        for (const q of searchQueries.queries) {
+        for (const q of limitedQueries) {
             try {
                 const results = await searchTool.invoke(q.query);
                 searchResults.push({
@@ -91,7 +58,7 @@ export async function POST(request: Request) {
                     results
                 });
                 // Add 1 second delay between searches
-                await delay(500);
+                await delay(800);
             } catch (error) {
                 console.error(`Error searching for query "${q.query}":`, error);
                 // Continue with other queries if one fails
