@@ -1,8 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { TranscriptionLine } from '@/types/transcription';
 import { useTranscriptionContext } from '@/context/TranscriptionContext';
+import { usePostHog } from 'posthog-js/react';
 
 export const useTranscription = () => {
+  const posthog = usePostHog();
   const { mode, transcriptOption } = useTranscriptionContext();
   const [isRecording, setIsRecording] = useState(false);
   const [status, setStatus] = useState('Click to start transcription');
@@ -151,15 +153,19 @@ export const useTranscription = () => {
       setLines([]);
       setBuffer('');
       try {
+        posthog.capture("transcription_started", {
+          mode
+        })
         await startRecording(websocketUrl, chunkDuration);
       } catch (err) {
         console.error(err);
         setStatus('Could not start transcription. Aborted.');
       }
     } else {
+      posthog.capture("transcription_stopped")
       stopRecording();
     }
-  }, [isRecording, startRecording, stopRecording]);
+  }, [isRecording, startRecording, stopRecording, posthog, mode]);
 
   // Cleanup on unmount
   useEffect(() => {

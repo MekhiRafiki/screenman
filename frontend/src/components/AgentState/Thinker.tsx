@@ -5,10 +5,12 @@ import { useScheduledProcess } from "@/hooks/useScheduledProcess"
 import { useTranscriptionContext } from "@/context/TranscriptionContext"
 import { DiscernResponse, ResearchResponse, Topic } from "@/types/research"
 import { Brain, Ear, MonitorDot } from "lucide-react"
+import { usePostHog } from "posthog-js/react"
 
 type ThinkingState = "listening" | "thinking" | "researching"
 
 export default function Thinker({ lines }: { lines: TranscriptionLine[] }) {
+	const posthog = usePostHog()
 	const [currentState, setCurrentState] = useState<ThinkingState>("listening")
 	const lastProcessedIndex = useRef<number>(0)
 	const linesRef = useRef<TranscriptionLine[]>(lines)
@@ -40,9 +42,11 @@ export default function Thinker({ lines }: { lines: TranscriptionLine[] }) {
 				currentTopic: newCurrentTopic,
 			}),
 		})
+		posthog.capture("summary_executed")
 		if (newSummary) {
 			const newSummaryData = await newSummary.json()
 			updateHighLevelSummary(newSummaryData)
+			posthog.capture("new_summary")
 		}
 	}
 
@@ -50,6 +54,7 @@ export default function Thinker({ lines }: { lines: TranscriptionLine[] }) {
 		if (discernData.newCurrentTopic) {
 			updatePastTopics(pastTopics.concat(discernData.newCurrentTopic))
 			updateCurrentTopic(discernData.newCurrentTopic)
+			posthog.capture("new_topic_change_detected")
 			updateSummary(discernData.newCurrentTopic)
 		}
 	}
@@ -113,6 +118,9 @@ export default function Thinker({ lines }: { lines: TranscriptionLine[] }) {
 				console.log("No New information retrieved during discernment")
 				return false
 			}
+			posthog.capture("discernment_executed", {
+				newClaims: discernData.claims?.length || 0,
+			})
 			handleDiscernData(discernData)
 
 			// Start research phase
@@ -129,6 +137,10 @@ export default function Thinker({ lines }: { lines: TranscriptionLine[] }) {
 				}),
 			})
 			const researchData = await researchResponse.json()
+			posthog.capture("research_executed", {
+				newAdjacentTopics: researchData.newAdjacentTopics?.length || 0,
+				newStageProposals: researchData.newStageProposals?.length || 0,
+			})
 			handleResearchData(researchData)
 
 			// Update the last processed index only after successful processing

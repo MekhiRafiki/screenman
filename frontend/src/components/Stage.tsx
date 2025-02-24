@@ -11,12 +11,14 @@ import {
 import { useState, useRef } from "react"
 import UrlPreview from "./UrlPreview"
 import { ResearchStageProposals } from "@/types/research"
+import { usePostHog } from "posthog-js/react"
 
 // ElevenLabs Voice ID captured from the dashboard.
 // const VOICE_ID = "ErXwobaYiN019PkySvjV"
 const VOICE_ID = "ThT5KcBeYPX3keUQqHPh" // Dorothy
 
 export default function Stage() {
+	const posthog = usePostHog()
 	const { stageProposals, updateStageProposals } = useTranscriptionContext()
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
@@ -33,12 +35,14 @@ export default function Stage() {
 			setCurrentIndex(
 				(prev) => (prev - 1 + stageProposals.length) % stageProposals.length
 			)
+			posthog.capture("proposal_previous")
 		}
 	}
 
 	const handleNextProposal = () => {
 		if (stageProposals.length > 0) {
 			setCurrentIndex((prev) => (prev + 1) % stageProposals.length)
+			posthog.capture("proposal_next")
 		}
 	}
 
@@ -49,6 +53,7 @@ export default function Stage() {
 			updateStageProposals(newProposals)
 			setCurrentIndex(Math.min(currentIndex, newProposals.length - 1))
 			setCompletedProposals((prev) => [...prev, removedProposal])
+			posthog.capture("proposal_acknowledged")
 		}
 	}
 
@@ -70,8 +75,10 @@ export default function Stage() {
 		if (audioRef.current) {
 			if (isPlaying) {
 				audioRef.current.pause()
+				posthog.capture("audio_paused")
 			} else {
 				audioRef.current.play()
+				posthog.capture("audio_played")
 			}
 			setIsPlaying(!isPlaying)
 		}
@@ -102,6 +109,7 @@ export default function Stage() {
 			if (!response.ok) {
 				throw new Error("Failed to generate speech")
 			}
+			posthog.capture("audio_generated")
 
 			const audioBlob = await response.blob()
 			const url = URL.createObjectURL(audioBlob)

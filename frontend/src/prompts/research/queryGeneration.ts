@@ -7,7 +7,6 @@ GUIDELINES:
 3. Create queries that will find both factual verification and engaging context
 4. Use search operators effectively (quotes, site:, etc.)
 
-Current Topic: {currentTopic}
 
 EXAMPLES:
 
@@ -35,4 +34,10 @@ Good Queries (Prioritized Most Interesting):
 4. "best NBA dunk contest years history"
 
 Format your response as structured output following the schema.
-Remember: Quality over quantity - aim for fewer, more effective queries.`;
+Remember: Quality over quantity - aim for fewer, more effective queries.
+
+
+Current Topic: {currentTopic}
+Claims:
+{claims}
+`
