@@ -21,7 +21,7 @@ export default function AgentState({
 }) {
 	const [websocketUrl, setWebsocketUrl] = useState("ws://localhost:8000/asr")
 	const [chunkDuration, setChunkDuration] = useState(1000)
-	const [showConvo, setShowConvo] = useState(true)
+	const [showConvo, setShowConvo] = useState(false)
 	const [showDevTools, setShowDevTools] = useState(false)
 
 	const handleWebsocketUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {

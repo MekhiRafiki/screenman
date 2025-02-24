@@ -12,11 +12,13 @@
     "@langchain/community": "^0.3.32",
     "@langchain/core": "^0.3.40",
     "@langchain/openai": "^0.4.4",
+    "@posthog/ai": "^3.2.1",
     "cheerio": "^1.0.0",
     "duck-duck-scrape": "^2.2.7",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
     "posthog-js": "^1.223.3",
+    "posthog-node": "^4.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

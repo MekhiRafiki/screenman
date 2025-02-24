@@ -13,13 +13,6 @@ Your mission is to analyze search results and create two types of content that w
    - Keep it relevant and interesting
    - Make it something people would actually want to chat about
 
-Current Topic: {currentTopic}
-Original Claims:
-{claims}
-
-Search Results:
-{searchResults}
-
 EXAMPLES:
 
 Input:
@@ -66,9 +59,22 @@ Output:
     ]
 }
 
+
 Format your response as structured output following the schema.
 Remember:
 - Keep it conversational! Write like a teleprompter for live broadcasters to understand and incorporate
 - Use emojis to add flavor (but don't overdo it)
 - Less formal, conversational and playful - but still accurate!
-- Share related URLs for further research.`;
+- Share related URLs for further research.
+
+
+### New content to generate from: ###
+
+Current Topic: {currentTopic}
+Original Claims:
+{claims}
+
+Search Results:
+{searchResults}
+
+`;

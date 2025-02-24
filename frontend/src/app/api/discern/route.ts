@@ -3,6 +3,7 @@ import { DiscernResponse } from "@/types/research"
 import { z } from "zod"
 import { TranscriptionLine } from "@/types/transcription"
 import { CLAIM_EXTRACTOR_PROMPT } from "@/prompts/research"
+import { analytics } from "@/utils/analytics"
 
 const discernSchema = z.object({
     newCurrentTopic: z.object({
@@ -17,19 +18,23 @@ const discernSchema = z.object({
     )
 });
 
+const modelChoice = "gpt-4-turbo-preview";
+
 const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-turbo-preview",
+    modelName: modelChoice,
 });
 
 const structuredLlm = model.withStructuredOutput(discernSchema);
 
-
 export async function POST(request: Request) {
+    const startTime = Date.now();
+    const traceId = `discern_${startTime}`;
     const { highLevelSummary, currentTopic, newLines } = await request.json();
     
     const userPrompt = `
         ${CLAIM_EXTRACTOR_PROMPT}
+        ### New content to generate from: ###
         Current State:
         ${highLevelSummary ? `High-level Summary: ${highLevelSummary}` : 'No current summary'}
 
@@ -43,6 +48,16 @@ export async function POST(request: Request) {
     try {
         const result = await structuredLlm.invoke(userPrompt);
         
+        analytics.captureAIGeneration({
+            traceId,
+            model: modelChoice,
+            input: [{ role: "user", content: userPrompt }],
+            outputChoices: [{ role: "assistant", content: JSON.stringify(result) }],
+            latency: (Date.now() - startTime) / 1000,
+            httpStatus: 200,
+            isError: false
+        });
+        
         // Convert to DiscernResponse type and ensure timestamp is set if there's a new topic
         const response: DiscernResponse = {
             ...result,
@@ -54,6 +69,16 @@ export async function POST(request: Request) {
 
         return Response.json(response);
     } catch (error) {
+        analytics.captureAIGeneration({
+            traceId,
+            model: modelChoice,
+            input: [{ role: "user", content: userPrompt }],
+            latency: (Date.now() - startTime) / 1000,
+            httpStatus: 500,
+            isError: true,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+
         console.error('Error in discernment:', error);
         return Response.json({ error: 'Failed to process conversation' }, { status: 500 });
     }
