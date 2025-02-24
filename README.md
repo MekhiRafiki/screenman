@@ -1,6 +1,8 @@
 # Screenman
 "Aye Screenman" - A Realtime Transcriber and Web Researcher for Podcasters and other Live Audio Hosts to have relevant information at a glance.
 
+<img width="1440" alt="ScreenMan_stage" src="https://github.com/user-attachments/assets/5c157f35-8f8b-4441-90e2-92c896960a20" />
+
 ## Inspiration
 
 Inspired by The Joe Budden podcast's production approach, where a behind-the-scenes team member researches topics in real-time to enrich discussions. As a podcast host myself, I recognized how valuable this role is for maintaining engaging, fact-based conversations. ScreenMan automates this support function, allowing hosts to focus on the conversation while maintaining accuracy and flow.
