@@ -1,43 +1,35 @@
 # Screenman
 "Aye Screenman" - A Realtime Transcriber and Web Researcher for Podcasters and other Live Audio Hosts to have relevant information at a glance.
 
-Uses an open source library to run a backend server for transcribing microphone audio with OpenAI Whisper API.
+## Inspiration
 
-This project is based on [Whisper Streaming](https://github.com/ufal/whisper_streaming) and lets you transcribe audio directly from your browser. Simply launch the local server and grant microphone access. Everything runs locally on your machine ✨
+Inspired by The Joe Budden podcast's production approach, where a behind-the-scenes team member researches topics in real-time to enrich discussions. As a podcast host myself, I recognized how valuable this role is for maintaining engaging, fact-based conversations. ScreenMan automates this support function, allowing hosts to focus on the conversation while maintaining accuracy and flow.
 
-<p align="center">
-  <img src="src/web/demo.png" alt="Demo Screenshot" width="600">
-</p>
+This could further be applied to live streamers and live audio hosts on sports and radio shows.
 
-### Differences from [Whisper Streaming](https://github.com/ufal/whisper_streaming)
+## What it does
 
-#### 🌐 **Web & API**  
-- **Built-in Web UI** – No frontend setup required, just open your browser and start transcribing.  
-- **FastAPI WebSocket Server** – Real-time speech-to-text processing with async FFmpeg streaming.  
-- **JavaScript Client** – Ready-to-use MediaRecorder implementation for seamless client-side integration.
+ScreenMan is a web application that serves as an AI-powered research assistant for live conversations. Its key features include:
 
-#### ⚙️ **Core Improvements**  
-- **Buffering Preview** – Displays unvalidated transcription segments for immediate feedback.  
-- **Multi-User Support** – Handles multiple users simultaneously without conflicts.  
-- **MLX Whisper Backend** – Optimized for Apple Silicon for faster local processing.  
-- **Enhanced Sentence Segmentation** – Improved buffer trimming for better accuracy across languages.  
-- **Extended Logging** – More detailed logs to improve debugging and monitoring.  
+- Real-time speech transcription and context analysis
+- Jeopardy-style display board showing relevant facts and media
+- Topic transition suggestions
 
-#### 🎙️ **Advanced Features**  
-- **Real-Time Diarization** – Identify different speakers in real time using [Diart](https://github.com/juanmc2005/diart).  
+## How we built it
 
+Built on a modern tech stack combining real-time audio processing with AI services:
 
-## Installation
+- Python server for audio buffering and OpenAI Whisper integration
+- NextJS full-stack application managing the frontend and backend pipelines
+- Multi-stage AI pipeline for:
+    - Speech transcription
+    - Claim detection and search query optimization
+    - Web research and fact verification
+    - Context-aware content staging
+- ElevenLabs text-to-speech for prompting narration
+- PostHog for analytics and LLM generation tracking
 
-1. **Clone the Repository**:
-
-   ```bash
-   git clone https://github.com/QuentinFuxa/whisper_streaming_web
-   cd whisper_streaming_web
-   ```
-
-
-### How to Launch the Backend Whisper Server
+## How to Launch the Backend Whisper Server
 
 1. **Dependencies**:
 
@@ -99,25 +91,14 @@ This project is based on [Whisper Streaming](https://github.com/ufal/whisper_str
     - Open your browser at `http://localhost:8000` (or replace `localhost` and `8000` with whatever you specified).  
     - The page uses vanilla JavaScript and the WebSocket API to capture your microphone and stream audio to the server in real time.
 
-### How the Live Interface Works
 
-- Once you **allow microphone access**, the page records small chunks of audio using the **MediaRecorder** API in **webm/opus** format.  
-- These chunks are sent over a **WebSocket** to the FastAPI endpoint at `/asr`.  
-- The Python server decodes `.webm` chunks on the fly using **FFmpeg** and streams them into the **whisper streaming** implementation for transcription.  
-- **Partial transcription** appears as soon as enough audio is processed. The “unvalidated” text is shown in **lighter or grey color** (i.e., an ‘aperçu’) to indicate it’s still buffered partial output. Once Whisper finalizes that segment, it’s displayed in normal text.  
-- You can watch the transcription update in near real time, ideal for demos, prototyping, or quick debugging.
+## Future Plans
 
-### Deploying to a Remote Server
-
-If you want to **deploy** this setup:
-
-1. **Host the FastAPI app** behind a production-grade HTTP(S) server (like **Uvicorn + Nginx** or Docker). If you use HTTPS, use "wss" instead of "ws" in WebSocket URL.
-2. The **HTML/JS page** can be served by the same FastAPI app or a separate static host.  
-3. Users open the page in **Chrome/Firefox** (any modern browser that supports MediaRecorder + WebSocket).  
-
-No additional front-end libraries or frameworks are required. The WebSocket logic in `live_transcription.html` is minimal enough to adapt for your own custom UI or embed in other pages.
+- Speaker diarization for multi-person conversations
+- Fine-tuned models to replace prompt engineering
+- Local speech-to-text processing for improved latency and cost efficiency
+- Production-ready online deployment for web app and servers
 
 ## Acknowledgments
 
-This project builds upon the foundational work of the Whisper Streaming project. We extend our gratitude to the original authors for their contributions.
-
+The backend of this project is supported by the foundational work of the Whisper Streaming project and the Whisper Online server backed. We extend our gratitude to the original authors for their contributions.
