@@ -1,14 +1,16 @@
 "use client"
 import AgentState from "@/components/AgentState/AgentState"
-import Transcript from "@/components/AgentState/Transcript/Transcript"
+import Transcript from "@/components/Transcript"
 import Stage from "@/components/Stage"
+import Related from "@/components/Related" // Added import statement for Related component
 import { TranscriptionProvider } from "@/context/TranscriptionContext"
 import { useState } from "react"
 import ButtonGroup from "@/components/ui/ButtonGroup"
 import { useTranscription } from "@/hooks/useTranscription"
 
+export type View = "Stage" | "Transcript" | "Related"
 function HomeContent() {
-	const [activeView, setActiveView] = useState("Stage")
+	const [activeView, setActiveView] = useState<View>("Stage")
 	const { lines, buffer, toggleRecording, isRecording } = useTranscription()
 
 	return (
@@ -26,15 +28,22 @@ function HomeContent() {
 				<div className="flex flex-row items-center justify-center mb-4">
 					<ButtonGroup
 						value={activeView}
-						onChange={setActiveView}
-						options={["Stage", "Transcript"]}
+						onChange={(value) => setActiveView(value as View)}
+						options={["Stage", "Transcript", "Related"]}
 					/>
 				</div>
-				{activeView === "Stage" ? (
-					<Stage />
-				) : (
-					<Transcript lines={lines} buffer={buffer} />
-				)}
+				{(() => {
+					switch (activeView) {
+						case "Stage":
+							return <Stage />
+						case "Transcript":
+							return <Transcript lines={lines} buffer={buffer} />
+						case "Related":
+							return <Related />
+						default:
+							return null
+					}
+				})()}
 			</div>
 		</div>
 	)

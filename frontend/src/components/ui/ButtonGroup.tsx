@@ -10,17 +10,17 @@ export default function ButtonGroup({
 	options,
 }: ButtonGroupProps) {
 	return (
-		<div className="inline-flex rounded-lg bg-[#1E1E1E] p-1">
+		<div className="inline-flex rounded-xl bg-[#1E1E1E] p-1.5">
 			{options.map((option) => (
 				<button
 					key={option}
 					onClick={() => onChange(option)}
 					className={`
-            px-6 py-2 text-sm font-medium transition-all duration-200
+            px-8 py-3 text-base font-semibold transition-all duration-200 rounded-lg
             ${
 							value === option
-								? "bg-[#7B7EF4] text-white rounded-md"
-								: "text-gray-300 hover:text-white"
+								? "bg-[#7B7EF4] text-white shadow-lg"
+								: "text-gray-300 hover:text-white hover:bg-white/5"
 						}
           `}
 				>

@@ -1,9 +1,9 @@
 import { useTranscriptionContext } from "@/context/TranscriptionContext"
 import { useState } from "react"
-import { Sparkles, History, Target, Network } from "lucide-react"
+import { Sparkles, History, Target } from "lucide-react"
 
 export default function ConvoDisplay() {
-	const { highLevelSummary, currentTopic, adjacentTopics, pastTopics } =
+	const { highLevelSummary, currentTopic, pastTopics } =
 		useTranscriptionContext()
 	const [isPastTopicsExpanded, setIsPastTopicsExpanded] = useState(false)
 
@@ -76,29 +76,6 @@ export default function ConvoDisplay() {
 					</div>
 				) : (
 					<p className="text-sm text-gray-400 italic">No active topic</p>
-				)}
-			</div>
-
-			<div>
-				<div className="flex items-center gap-2 mb-2">
-					<Network className="w-4 h-4 text-gray-600" />
-					<h3 className="font-semibold text-gray-800">Related Topics</h3>
-				</div>
-				{adjacentTopics.length > 0 ? (
-					<div className="space-y-2">
-						{adjacentTopics.map((topic, index) => (
-							<div key={index} className="p-2 bg-gray-50 rounded-md">
-								<h4 className="text-sm font-medium text-gray-800">
-									{topic.title}
-								</h4>
-								<p className="text-xs text-gray-600">{topic.description}</p>
-							</div>
-						))}
-					</div>
-				) : (
-					<p className="text-sm text-gray-400 italic">
-						No related topics found
-					</p>
 				)}
 			</div>
 		</div>
