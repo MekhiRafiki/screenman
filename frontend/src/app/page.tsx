@@ -7,9 +7,11 @@ import { TranscriptionProvider } from "@/context/TranscriptionContext"
 import { useState } from "react"
 import ButtonGroup from "@/components/ui/ButtonGroup"
 import { useTranscription } from "@/hooks/useTranscription"
+import { usePostHog } from "posthog-js/react"
 
 export type View = "Stage" | "Transcript" | "Related"
 function HomeContent() {
+	const posthog = usePostHog()
 	const [activeView, setActiveView] = useState<View>("Stage")
 	const { lines, buffer, toggleRecording, isRecording } = useTranscription()
 
@@ -28,7 +30,12 @@ function HomeContent() {
 				<div className="flex flex-row items-center justify-center mb-4">
 					<ButtonGroup
 						value={activeView}
-						onChange={(value) => setActiveView(value as View)}
+						onChange={(value) => {
+							setActiveView(value as View)
+							posthog.capture("view_changed", {
+								view: value,
+							})
+						}}
 						options={["Stage", "Transcript", "Related"]}
 					/>
 				</div>
