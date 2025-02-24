@@ -25,6 +25,23 @@ export default function ConvoDisplay() {
 
 			<div>
 				<div className="flex items-center gap-2 mb-2">
+					<Target className="w-4 h-4 text-gray-600" />
+					<h3 className="font-semibold text-gray-800">Current Topic</h3>
+				</div>
+				{currentTopic ? (
+					<div className="p-2 bg-gray-50 rounded-md">
+						<h4 className="text-sm font-medium text-gray-800">
+							{currentTopic.title}
+						</h4>
+						<p className="text-xs text-gray-600">{currentTopic.description}</p>
+					</div>
+				) : (
+					<p className="text-sm text-gray-400 italic">No active topic</p>
+				)}
+			</div>
+
+			<div>
+				<div className="flex items-center gap-2 mb-2">
 					<History className="w-4 h-4 text-gray-600" />
 					<h3 className="font-semibold text-gray-800">Past Topics</h3>
 				</div>
@@ -59,23 +76,6 @@ export default function ConvoDisplay() {
 					</div>
 				) : (
 					<p className="text-sm text-gray-400 italic">No previous topics yet</p>
-				)}
-			</div>
-
-			<div>
-				<div className="flex items-center gap-2 mb-2">
-					<Target className="w-4 h-4 text-gray-600" />
-					<h3 className="font-semibold text-gray-800">Current Topic</h3>
-				</div>
-				{currentTopic ? (
-					<div className="p-2 bg-gray-50 rounded-md">
-						<h4 className="text-sm font-medium text-gray-800">
-							{currentTopic.title}
-						</h4>
-						<p className="text-xs text-gray-600">{currentTopic.description}</p>
-					</div>
-				) : (
-					<p className="text-sm text-gray-400 italic">No active topic</p>
 				)}
 			</div>
 		</div>
