@@ -3,7 +3,7 @@ import { TranscriptionLine } from '@/types/transcription';
 import { useTranscriptionContext } from '@/context/TranscriptionContext';
 
 export const useTranscription = () => {
-  const { mode } = useTranscriptionContext();
+  const { mode, transcriptOption } = useTranscriptionContext();
   const [isRecording, setIsRecording] = useState(false);
   const [status, setStatus] = useState('Click to start transcription');
   const [lines, setLines] = useState<TranscriptionLine[]>([]);
@@ -76,12 +76,13 @@ export const useTranscription = () => {
     // File simulation functions
     const simulateFileTranscription = useCallback(async () => {
       try {
-        const response = await fetch('/data/jbp_allstar.txt');
+        // Use the selected transcript option's path
+        const response = await fetch(transcriptOption.path);
         const text = await response.text();
         const allLines = text.split('\n').filter(line => line.trim());
         
         const processLines = async () => {
-          const BATCH_SIZE = 3;
+          const BATCH_SIZE = 1;
           for (let i = 0; i < allLines.length; i += BATCH_SIZE) {
             const batch = allLines.slice(i, i + BATCH_SIZE);
             setLines(prev => [
@@ -94,7 +95,7 @@ export const useTranscription = () => {
             
             // Wait for 1 second before next batch
             await new Promise(resolve => {
-              fileSimulationRef.current = setTimeout(resolve, 600);
+              fileSimulationRef.current = setTimeout(resolve, 1200);
             });
           }
           
@@ -112,7 +113,7 @@ export const useTranscription = () => {
         setStatus('Error reading file');
         stopRecording();
       }
-    }, [isRecording, stopRecording]);
+    }, [isRecording, stopRecording, transcriptOption]);
 
   const startRecording = useCallback(async (websocketUrl?: string, chunkDuration?: number) => {
     if (mode === 'file') {
