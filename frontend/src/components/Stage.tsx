@@ -1,15 +1,36 @@
 "use client"
 import { useTranscriptionContext } from "@/context/TranscriptionContext"
-import { Check, ChevronRight, Volume2, Loader2, Pause } from "lucide-react"
+import {
+	Check,
+	ChevronRight,
+	ChevronLeft,
+	Volume2,
+	Loader2,
+	Pause,
+} from "lucide-react"
 import { useState, useRef } from "react"
 import UrlPreview from "./UrlPreview"
+import { ResearchStageProposals } from "@/types/research"
 
 export default function Stage() {
 	const { stageProposals, updateStageProposals } = useTranscriptionContext()
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
 	const [isPlaying, setIsPlaying] = useState(false)
+	// TODO(mj): Display the completed proposals later
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const [completedProposals, setCompletedProposals] = useState<
+		ResearchStageProposals[]
+	>([])
 	const audioRef = useRef<HTMLAudioElement | null>(null)
+
+	const handlePrevProposal = () => {
+		if (stageProposals.length > 0) {
+			setCurrentIndex(
+				(prev) => (prev - 1 + stageProposals.length) % stageProposals.length
+			)
+		}
+	}
 
 	const handleNextProposal = () => {
 		if (stageProposals.length > 0) {
@@ -19,9 +40,11 @@ export default function Stage() {
 
 	const handleRemoveProposal = () => {
 		if (stageProposals.length > 0) {
+			const removedProposal = stageProposals[currentIndex]
 			const newProposals = stageProposals.filter((_, i) => i !== currentIndex)
 			updateStageProposals(newProposals)
 			setCurrentIndex(Math.min(currentIndex, newProposals.length - 1))
+			setCompletedProposals((prev) => [...prev, removedProposal])
 		}
 	}
 
@@ -118,10 +141,26 @@ export default function Stage() {
 				)}
 
 				{stageProposals.length > 0 && (
-					<div className="mt-6 text-center">
+					<div className="mt-6 text-center flex flex-col gap-4">
 						<span className="text-white/70 text-sm font-medium">
 							Proposal {currentIndex + 1} of {stageProposals.length}
 						</span>
+						<div className="flex items-center justify-center gap-3">
+							<button
+								onClick={handlePrevProposal}
+								className="bg-white/10 hover:bg-white/20 transition-colors text-white p-2 rounded-lg"
+								title="Previous proposal"
+							>
+								<ChevronLeft className="w-5 h-5" />
+							</button>
+							<button
+								onClick={handleNextProposal}
+								className="bg-white/10 hover:bg-white/20 transition-colors text-white p-2 rounded-lg"
+								title="Next proposal"
+							>
+								<ChevronRight className="w-5 h-5" />
+							</button>
+						</div>
 					</div>
 				)}
 
@@ -161,18 +200,9 @@ export default function Stage() {
 				<div className="flex items-center gap-4">
 					<button
 						onClick={handleRemoveProposal}
-						className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors text-white px-6 py-3 rounded-lg"
+						className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 transition-colors text-white px-6 py-3 rounded-lg"
 					>
 						<Check className="w-5 h-5" />
-						<span>Complete</span>
-					</button>
-
-					<button
-						onClick={handleNextProposal}
-						className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors text-white px-6 py-3 rounded-lg"
-					>
-						<ChevronRight className="w-5 h-5" />
-						<span>Next</span>
 					</button>
 				</div>
 			)}
