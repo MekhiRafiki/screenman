@@ -12,6 +12,10 @@ import { useState, useRef } from "react"
 import UrlPreview from "./UrlPreview"
 import { ResearchStageProposals } from "@/types/research"
 
+// ElevenLabs Voice ID captured from the dashboard.
+// const VOICE_ID = "ErXwobaYiN019PkySvjV"
+const VOICE_ID = "ThT5KcBeYPX3keUQqHPh" // Dorothy
+
 export default function Stage() {
 	const { stageProposals, updateStageProposals } = useTranscriptionContext()
 	const [currentIndex, setCurrentIndex] = useState(0)
@@ -77,7 +81,7 @@ export default function Stage() {
 		try {
 			setIsGeneratingAudio(true)
 			const response = await fetch(
-				"https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb",
+				`"https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
 				{
 					method: "POST",
 					headers: {
@@ -86,7 +90,7 @@ export default function Stage() {
 					},
 					body: JSON.stringify({
 						text: currentText,
-						model_id: "eleven_flash_v2_5",
+						model_id: "eleven_multilingual_v2",
 						voice_settings: {
 							stability: 0.5,
 							similarity_boost: 0.75,
