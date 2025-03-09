@@ -33,6 +33,7 @@ export default function UrlPreview({ url, index }: UrlPreviewProps) {
                 setMetadata({
                     domain: new URL(url).hostname
                 });
+                console.error(error)
             } finally {
                 setLoading(false);
             }

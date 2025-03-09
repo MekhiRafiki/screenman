@@ -28,7 +28,8 @@ export function useScheduledProcess(
             // Always schedule next run after completion, regardless of success/failure
             scheduleNext(intervalMs);
         }
-    }, [enabled, intervalMs, process]);
+    }, [enabled, intervalMs, process, scheduleNext]);
+
 
     useEffect(() => {
         // Initial run
@@ -39,5 +40,5 @@ export function useScheduledProcess(
                 clearTimeout(timeoutRef.current);
             }
         };
-    }, [enabled, intervalMs]);
+    }, [enabled, intervalMs, runProcess]);
 }

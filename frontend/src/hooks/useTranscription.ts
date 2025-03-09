@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { TranscriptionLine, AssemblyAIMessage } from '@/types/transcription'
+import { TranscriptionLine } from '@/types/transcription'
 import { useTranscriptionContext } from '@/context/TranscriptionContext'
 import { usePostHog } from 'posthog-js/react'
 import { AssemblyAI, RealtimeTranscriber, RealtimeTranscript } from 'assemblyai';
