@@ -13,6 +13,7 @@
     "@langchain/core": "^0.3.40",
     "@langchain/openai": "^0.4.4",
     "@posthog/ai": "^3.2.1",
+    "assemblyai": "^4.9.0",
     "cheerio": "^1.0.0",
     "duck-duck-scrape": "^2.2.7",
     "lucide-react": "^0.475.0",

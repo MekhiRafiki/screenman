@@ -1,7 +1,9 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { TranscriptionLine } from '@/types/transcription';
-import { useTranscriptionContext } from '@/context/TranscriptionContext';
-import { usePostHog } from 'posthog-js/react';
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { TranscriptionLine, AssemblyAIMessage } from '@/types/transcription'
+import { useTranscriptionContext } from '@/context/TranscriptionContext'
+import { usePostHog } from 'posthog-js/react'
+import { AssemblyAI, RealtimeTranscriber, RealtimeTranscript } from 'assemblyai';
+import { getAssemblyToken } from '@/app/actions/assemblyAI';
 
 export const useTranscription = () => {
   const posthog = usePostHog();
@@ -11,46 +13,91 @@ export const useTranscription = () => {
   const [lines, setLines] = useState<TranscriptionLine[]>([]);
   const [buffer, setBuffer] = useState('');
   
-  const websocketRef = useRef<WebSocket | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
+  const transcriberRef = useRef<RealtimeTranscriber | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
   const userClosingRef = useRef(false);
   const fileSimulationRef = useRef<NodeJS.Timeout | null>(null);
 
-  const setupWebSocket = useCallback(async (websocketUrl: string) => {
-    return new Promise<void>((resolve, reject) => {
-      try {
-        const ws = new WebSocket(websocketUrl);
-        websocketRef.current = ws;
-
-        ws.onopen = () => {
-          setStatus('Connected to server.');
-          resolve();
-        };
-
-        ws.onclose = () => {
-          if (userClosingRef.current) {
-            setStatus('WebSocket closed by user.');
-          } else {
-            setStatus('Disconnected from the WebSocket server. (Check logs if model is loading.)');
-          }
-          userClosingRef.current = false;
-        };
-
-        ws.onerror = () => {
-          setStatus('Error connecting to WebSocket.');
-          reject(new Error('Error connecting to WebSocket'));
-        };
-
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          setLines(data.lines || []);
-          setBuffer(data.buffer || '');
-        };
-      } catch (error) {
-        setStatus('Invalid WebSocket URL. Please check and try again.');
-        reject(error);
+  const setupWebSocket = useCallback(async () => {
+    try {
+      const apiKey = await getAssemblyToken();
+      if (!apiKey) {
+        throw new Error('Failed to get AssemblyAI temporary token');
       }
-    });
+      const client = new AssemblyAI({
+        apiKey
+      })
+
+      // Initialize WebSocket connection
+      const transcriber = client.realtime.transcriber({
+        sampleRate: 16000
+      })
+      /**
+       * Minimum quality: 8_000 (8 kHz)
+       * Medium quality: 16_000 (16 kHz)
+       * Maximum quality: 48_000 (48 kHz)
+       */
+
+      // Send authentication message immediately after connection
+      transcriber.on('open', () => {
+        setStatus('Connected to AssemblyAI');
+      })
+
+      transcriber.on('error', (error) => {
+        console.error('WebSocket Error:', error);
+        setStatus('Error connecting to AssemblyAI');
+      })
+
+      transcriber.on('close', () => {
+        if (userClosingRef.current) {
+          setStatus('Transcription stopped by user.');
+        } else {
+          setStatus('Disconnected from AssemblyAI.');
+        }
+        userClosingRef.current = false;
+      })
+
+      transcriber.on('transcript', (transcript: RealtimeTranscript) => {
+        if (!transcript.text) {
+          return
+        }
+
+        switch (transcript.message_type) {
+          case 'PartialTranscript':
+            console.log('Partial:', transcript.text);
+            if (transcript.text) {
+              setBuffer(transcript.text);
+            }
+            break;
+
+          case 'FinalTranscript':
+            console.log('Final:', transcript.text);
+            if (transcript.text) {
+              const newLine: TranscriptionLine = {
+                speaker: 1,
+                text: transcript.text,
+                beg: transcript.audio_start?.toString() ?? undefined,
+                end: transcript.audio_end?.toString() ?? undefined,
+                diff: transcript.audio_end && transcript.audio_start ? transcript.audio_end - transcript.audio_start : undefined
+              };
+              setLines(prev => [...prev, newLine]);
+              setBuffer('');
+            }
+            break;
+
+          default:
+            break;
+        }
+      })
+      await transcriber.connect();
+      transcriberRef.current = transcriber;
+    } catch (error) {
+      console.error('Failed to setup WebSocket:', error);
+      setStatus(`Failed to connect: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error;
+    }
   }, []);
 
   const stopRecording = useCallback(() => {
@@ -60,14 +107,21 @@ export const useTranscription = () => {
       clearTimeout(fileSimulationRef.current);
       fileSimulationRef.current = null;
     } else {
-      if (recorderRef.current) {
-        recorderRef.current.stop();
-        recorderRef.current = null;
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current = null;
       }
 
-      if (websocketRef.current) {
-        websocketRef.current.close();
-        websocketRef.current = null;
+      if (processorRef.current && audioContextRef.current) {
+        processorRef.current.disconnect();
+        audioContextRef.current.close();
+        processorRef.current = null;
+        audioContextRef.current = null;
+      }
+
+      if (transcriberRef.current) {
+        transcriberRef.current.close();
+        transcriberRef.current = null;
       }
     }
 
@@ -117,30 +171,49 @@ export const useTranscription = () => {
       }
     }, [isRecording, stopRecording, transcriptOption]);
 
-  const startRecording = useCallback(async (websocketUrl?: string, chunkDuration?: number) => {
+
+
+  const startRecording = useCallback(async () => {
     if (mode === 'file') {
       setIsRecording(true);
       setStatus('Simulating transcription from file...');
       void simulateFileTranscription();
     } else {
       try {
-        if (!websocketUrl || !chunkDuration) {
-          throw new Error('WebSocket URL and chunk duration required for microphone mode');
-        }
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            sampleRate: 16000,
+            channelCount: 1
+          }
+        });
+        mediaStreamRef.current = stream;
+
+        await setupWebSocket();
         
-        recorder.ondataavailable = (e) => {
-          if (websocketRef.current?.readyState === WebSocket.OPEN) {
-            websocketRef.current.send(e.data);
+        // Convert audio stream to raw PCM data and send to AssemblyAI
+        const audioContext = new AudioContext({ sampleRate: 16000 });
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        audioContextRef.current = audioContext;
+        processorRef.current = processor;
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+
+        processor.onaudioprocess = (e) => {
+          if (transcriberRef.current) {
+            const inputData = e.inputBuffer.getChannelData(0);
+            const buffer = new Int16Array(inputData.length);
+            for (let i = 0; i < inputData.length; i++) {
+              buffer[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+            }
+            transcriberRef.current?.sendAudio(buffer);
           }
         };
 
-        await setupWebSocket(websocketUrl);
-        recorder.start(chunkDuration);
-        recorderRef.current = recorder;
         setIsRecording(true);
-        setStatus('Recording...');
+        setStatus('Recording and transcribing...');
       } catch (err) {
         setStatus('Error accessing microphone. Please allow microphone access.');
         throw err;
@@ -148,7 +221,7 @@ export const useTranscription = () => {
     }
   }, [mode, setupWebSocket, simulateFileTranscription]);
 
-  const toggleRecording = useCallback(async (websocketUrl?: string, chunkDuration?: number) => {
+  const toggleRecording = useCallback(async () => {
     if (!isRecording) {
       setLines([]);
       setBuffer('');
@@ -156,7 +229,7 @@ export const useTranscription = () => {
         posthog.capture("transcription_started", {
           mode
         })
-        await startRecording(websocketUrl, chunkDuration);
+        await startRecording();
       } catch (err) {
         console.error(err);
         setStatus('Could not start transcription. Aborted.');
